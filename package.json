@@ -1,0 +1,19 @@
+{
+  "name": "eem",
+  "version": "1.0.0",
+  "description": "wordpress oauth",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "JP Earnest",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^4.0.0",
+    "express": "^4.15.2",
+    "mongoose": "^4.9.3",
+    "passport": "^0.3.2",
+    "passport-wordpress": "0.0.4",
+    "request": "^2.81.0"
+  }
+}
