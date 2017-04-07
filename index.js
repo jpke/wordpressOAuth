@@ -4,7 +4,7 @@ var mongoose = require('mongoose');
 var User = require('./User');
 var WordpressStrategy = require('passport-wordpress').Strategy;
 var app = express()
-var request = require('request');
+var unirest = require('unirest');
 
 require("dotenv").config({silent: true});
 
@@ -20,7 +20,7 @@ passport.use(new WordpressStrategy({
     callbackURL: CALLBACK_URL
   },
   function(accessToken, refreshToken, profile, done) {
-    console.log("wordpress profile: ", profile, "accessToken: ", accessToken, refreshToken);
+    console.log("wordpress profile: ", profile, "accessToken: ", accessToken);
     User.find({WordpressId: profile.id}).exec()
     .then(function(user) {
       if(user) {
@@ -44,14 +44,28 @@ passport.use(new WordpressStrategy({
 app.use(passport.initialize());
 
 app.get('/auth/wordpress',
-  passport.authorize('wordpress'));
+  // passport.authorize('wordpress'));
+  function(req, res) {
+    res.redirect(`https://public-api.wordpress.com/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${CALLBACK_URL}&response_type=code&scope=auth`)
+  }
+)
 
 app.get('/auth/wordpress/callback',
   passport.authorize('wordpress', { failureRedirect: '/login' }),
   function(req, res) {
     console.log("req.user: ", req.query.code);
+    unirest.post('https://public-api.wordpress.com/oauth2/token')
+    .send(`client_id=${CLIENT_ID}`)
+    .send('grant_type=authorization_code')
+    .send(`client_secret=${CLIENT_SECRET}`)
+    .send(`redirect_uri=${CALLBACK_URL}`)
+    .send(`code=od)REEV9KZx2IyBgD&nU@AzOcMPmui54idw^q3dKF&j4G0dpSXD$a)n)z2ZRCDdK`)
+    .end(function(response) {
+      console.log("auth code response: ", response.raw_body);
+      res.redirect('/');
+    })
     // Successful authentication, redirect home.
-    res.redirect('/');
+    // res.redirect('/');
   });
 
 app.get('/', function (req, res) {
@@ -61,6 +75,8 @@ app.get('/', function (req, res) {
 app.get('/login', function (req, res) {
   res.send('You must login!')
 })
+
+// unirest.post('https://public-api.wordpress.com/oauth2/token-info?client_id')
 
 mongoose.Promise = global.Promise;
 mongoose.connect(process.env.DATABASE_URI || 'mongodb://<database name>').then(function() {
